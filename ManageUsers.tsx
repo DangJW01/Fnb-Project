@@ -1,31 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Button,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 
-const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/Users';
+const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/User';
 
-interface User {
-  Email: string;
-  Password: string;
+interface UserData {
+  userId: number;
+  email: string;
+  password: string;
+  userLevel: string;
+  dtAdded: string;
 }
 
 const ManageUsersScreen: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [newUserEmail, setNewUserEmail] = useState<string>('');
   const [newUserPassword, setNewUserPassword] = useState<string>('');
 
   useEffect(() => {
-    fetchUsers();
+    fetchUserData();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUserData = async () => {
     try {
       const response = await fetch(API_BASE_URL);
       const data = await response.json();
@@ -42,9 +37,9 @@ const ManageUsersScreen: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ Email: newUserEmail, Password: newUserPassword }),
+        body: JSON.stringify({ email: newUserEmail, password: newUserPassword }),
       });
-      const data: User = await response.json();
+      const data: UserData = await response.json();
       setUsers([...users, data]);
       setNewUserEmail('');
       setNewUserPassword('');
@@ -58,7 +53,7 @@ const ManageUsersScreen: React.FC = () => {
       await fetch(`${API_BASE_URL}/${email}`, {
         method: 'DELETE',
       });
-      setUsers(users.filter((user) => user.Email !== email));
+      setUsers(users.filter((user) => user.email !== email));
     } catch (error) {
       console.error('Error deleting user:', error);
     }
@@ -71,10 +66,10 @@ const ManageUsersScreen: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ Password: newPassword }),
+        body: JSON.stringify({ password: newPassword }),
       });
-      const updatedUser: User = await response.json();
-      setUsers(users.map((user) => (user.Email === email ? updatedUser : user)));
+      const updatedUser: UserData = await response.json();
+      setUsers(users.map((user) => (user.email === email ? updatedUser : user)));
     } catch (error) {
       console.error('Error updating user:', error);
     }
@@ -103,26 +98,28 @@ const ManageUsersScreen: React.FC = () => {
         <Button title="Add User" onPress={addUser} />
       </View>
 
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item.Email}
-        renderItem={({ item }) => (
-          <View style={styles.userItem}>
-            <Text>{`Email: ${item.Email}, Password: ${item.Password}`}</Text>
+      <ScrollView style={styles.scrollView}>
+        {users.map((item) => (
+          <View key={item.userId} style={styles.userItem}>
+            <Text>{`UserID: ${item.userId}`}</Text>
+            <Text>{`Email: ${item.email}`}</Text>
+            <Text>{`Password: ${item.password}`}</Text>
+            <Text>{`User Level: ${item.userLevel}`}</Text>
+            <Text>{`Date Added: ${item.dtAdded}`}</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => updateUser(item.Email, 'new-password')}
+                onPress={() => updateUser(item.email, 'new-password')}
               >
                 <Text>Update</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={() => deleteUser(item.Email)}>
+              <TouchableOpacity style={styles.button} onPress={() => deleteUser(item.email)}>
                 <Text>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -168,6 +165,9 @@ const styles = StyleSheet.create({
     borderColor: 'lightgray',
     borderWidth: 1,
     borderRadius: 5,
+  },
+  scrollView: {
+    width: '100%',
   },
 });
 
