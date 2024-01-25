@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import axios from 'axios';
 
 const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/User';
 
@@ -22,9 +23,8 @@ const ManageUsersScreen: React.FC = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(API_BASE_URL);
-      const data = await response.json();
-      setUsers(data);
+      const response = await axios.get(API_BASE_URL);
+      setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -32,14 +32,11 @@ const ManageUsersScreen: React.FC = () => {
 
   const addUser = async () => {
     try {
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: newUserEmail, password: newUserPassword }),
+      const response = await axios.post(API_BASE_URL, {
+        email: newUserEmail,
+        password: newUserPassword,
       });
-      const data: UserData = await response.json();
+      const data: UserData = response.data;
       setUsers([...users, data]);
       setNewUserEmail('');
       setNewUserPassword('');
@@ -50,9 +47,7 @@ const ManageUsersScreen: React.FC = () => {
 
   const deleteUser = async (email: string) => {
     try {
-      await fetch(`${API_BASE_URL}/${email}`, {
-        method: 'DELETE',
-      });
+      await axios.delete(`${API_BASE_URL}/${email}`);
       setUsers(users.filter((user) => user.email !== email));
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -61,14 +56,10 @@ const ManageUsersScreen: React.FC = () => {
 
   const updateUser = async (email: string, newPassword: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/${email}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: newPassword }),
+      const response = await axios.put(`${API_BASE_URL}/${email}`, {
+        password: newPassword,
       });
-      const updatedUser: UserData = await response.json();
+      const updatedUser: UserData = response.data;
       setUsers(users.map((user) => (user.email === email ? updatedUser : user)));
     } catch (error) {
       console.error('Error updating user:', error);
@@ -99,13 +90,22 @@ const ManageUsersScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.scrollView}>
+        <View style={styles.userItem}>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>UserID</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Email</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Password</Text>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>User Level</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Date Added</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Actions</Text>
+        </View>
+
         {users.map((item) => (
           <View key={item.userId} style={styles.userItem}>
-            <Text>{`UserID: ${item.userId}`}</Text>
-            <Text>{`Email: ${item.email}`}</Text>
-            <Text>{`Password: ${item.password}`}</Text>
-            <Text>{`User Level: ${item.userLevel}`}</Text>
-            <Text>{`Date Added: ${item.dtAdded}`}</Text>
+            <Text style={{ flex: 1 }}>{item.userId}</Text>
+            <Text style={{ flex: 2 }}>{item.email}</Text>
+            <Text style={{ flex: 2 }}>{item.password}</Text>
+            <Text style={{ flex: 1 }}>{item.userLevel}</Text>
+            <Text style={{ flex: 2 }}>{item.dtAdded}</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.button}
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   userItem: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -168,6 +168,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     width: '100%',
+  },
+  tableHeader: {
+    fontWeight: 'bold',
   },
 });
 
