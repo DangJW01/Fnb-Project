@@ -27,7 +27,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigateToAdminPage('Products')}
+          onPress={() => navigateToAdminPage('ManageProducts')}
         >
           <Text style={styles.cardText}>Products</Text>
         </TouchableOpacity>

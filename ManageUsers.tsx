@@ -5,7 +5,7 @@ import Modal from 'react-native-modal';
 import { Alert } from 'react-native';
 
 
-const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/User';
+const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/user';
 
 interface UserData {
   userId: number;
