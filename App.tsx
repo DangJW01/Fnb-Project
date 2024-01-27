@@ -3,12 +3,12 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomeScreen from './HomeScreen';
-import AdminPage from './AdminPage';
-import ManageOrder from './ManageOrder';
-import ManageUsers from './ManageUsers';
-import ManageProducts from './ManageProducts';
-import ManageCategory from './ManageCategory';
+import HomeScreen from './admin/HomeScreen';
+import AdminPage from './admin/AdminPage';
+import ManageOrder from './admin/ManageOrder';
+import ManageUsers from './admin/ManageUsers';
+import ManageProducts from './admin/ManageProducts';
+import ManageCategory from './admin/ManageCategory';
 import ViewOrderDetail from './ViewOrderDetail';
 
 // Define the RootStackParamList

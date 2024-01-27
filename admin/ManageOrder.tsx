@@ -4,7 +4,7 @@ import axios from 'axios';
 import Modal from 'react-native-modal';
 import { Alert } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from './App'; 
+import { RootStackParamList } from '../App'; 
 
 const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order';
 
