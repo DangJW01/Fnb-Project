@@ -1,5 +1,3 @@
-// App.tsx
-
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -10,6 +8,8 @@ import ManageUsers from './admin/ManageUsers';
 import ManageProducts from './admin/ManageProducts';
 import ManageCategory from './admin/ManageCategory';
 import ViewOrderDetail from './ViewOrderDetail';
+import CustomerHomePage from './customer/Homepage';
+import ProductDetailPage from './customer/ProductDetailPage'; // Import the new screen
 
 // Define the RootStackParamList
 export type RootStackParamList = {
@@ -19,8 +19,9 @@ export type RootStackParamList = {
   ManageUsers: undefined;
   ManageProducts: undefined;
   ManageCategory: undefined;
+  CustomerHomePage: undefined;
   ViewOrderDetail: { orderId: number; totalAmount?: string };
-
+  ProductDetailPage: { productId: number }; // Add the new screen
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -28,14 +29,16 @@ const Stack = createStackNavigator<RootStackParamList>();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName="CustomerHomePage">
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="CustomerHomePage" component={CustomerHomePage} />
         <Stack.Screen name="AdminPage" component={AdminPage} />
         <Stack.Screen name="ManageOrder" component={ManageOrder} />
         <Stack.Screen name="ManageUsers" component={ManageUsers} />
         <Stack.Screen name="ManageProducts" component={ManageProducts} />
         <Stack.Screen name="ManageCategory" component={ManageCategory} />
         <Stack.Screen name="ViewOrderDetail" component={ViewOrderDetail} />
+        <Stack.Screen name="ProductDetailPage" component={ProductDetailPage} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
