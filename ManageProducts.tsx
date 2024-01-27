@@ -12,7 +12,15 @@ import {
   Alert,
 } from 'react-native';
 
+
+
 const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/product';
+
+interface Category {
+  categoryId: number;
+  name: string;
+  desc: string;
+}
 
 interface Product {
   productId: number;
@@ -178,41 +186,44 @@ const ManageProductScreen: React.FC = () => {
     }
   };
 
+  const [categories, setCategories] = useState<Category[]>([]);
  
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/category');
+        const categoriesData = await response.json();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const renderCategoryRadioButtons = () => (
     <View>
-      <TouchableOpacity onPress={() => setModalProductCategory('Western')}>
-        <Text style={styles.categoryOption}>Western</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setModalProductCategory('Asian')}>
-        <Text style={styles.categoryOption}>Asian</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setModalProductCategory('Beverages')}>
-        <Text style={styles.categoryOption}>Beverages</Text>
-      </TouchableOpacity>
+      {categories.map((category) => (
+        <TouchableOpacity key={category.categoryId} onPress={() => setModalProductCategory(category.name)}>
+          <Text style={styles.categoryOption}>{category.name}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
-  
+
   const renderCategoryRadioButtons2 = () => (
     <View>
-      <TouchableOpacity onPress={() => setNewProductCategory('Western')}>
-        <Text style={styles.categoryOption}>Western</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setNewProductCategory('Asian')}>
-        <Text style={styles.categoryOption}>Asian</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setNewProductCategory('Beverages')}>
-        <Text style={styles.categoryOption}>Beverages</Text>
-      </TouchableOpacity>
+      {categories.map((category) => (
+        <TouchableOpacity key={category.categoryId} onPress={() => setNewProductCategory(category.name)}>
+          <Text style={styles.categoryOption}>{category.name}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
-  
 
-  const selectCategory = (category: string) => {
-  setNewProductCategory(category);
-  setIsCategoryDialogVisible(false);
-};
+        
 
   return (
     <View style={styles.container}>
@@ -262,30 +273,30 @@ const ManageProductScreen: React.FC = () => {
       </Modal>
 
       <Modal
-        visible={isCategoryDialogVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsCategoryDialogVisible2(false)}
-      >
-        <View style={styles.categoryDialogContainer}>
-          <Text style={styles.modalTitle}>Select Category</Text>
-          {renderCategoryRadioButtons()}
-          <Button title="Close" onPress={() => setIsCategoryDialogVisible(false)} />
-        </View>
-      </Modal>
+  visible={isCategoryDialogVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setIsCategoryDialogVisible(false)}
+>
+  <View style={styles.categoryDialogContainer}>
+    <Text style={styles.modalTitle}>Select Category</Text>
+    {renderCategoryRadioButtons()}
+    <Button title="Close" onPress={() => setIsCategoryDialogVisible(false)} />
+  </View>
+</Modal>
 
-      <Modal
-        visible={isCategoryDialogVisible2}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsCategoryDialogVisible2(false)}
-      >
-        <View style={styles.categoryDialogContainer}>
-          <Text style={styles.modalTitle}>Select Category</Text>
-          {renderCategoryRadioButtons2()}
-          <Button title="Close" onPress={() => setIsCategoryDialogVisible2(false)} />
-        </View>
-      </Modal>
+<Modal
+  visible={isCategoryDialogVisible2}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setIsCategoryDialogVisible2(false)}
+>
+  <View style={styles.categoryDialogContainer}>
+    <Text style={styles.modalTitle}>Select Category</Text>
+    {renderCategoryRadioButtons2()}
+    <Button title="Close" onPress={() => setIsCategoryDialogVisible2(false)} />
+  </View>
+</Modal>
 
      
 
@@ -433,7 +444,10 @@ const styles = StyleSheet.create({
   },
   categoryOption: {
     fontSize: 18,
-    fontWeight: 'bold',
+    borderWidth: 1,  // Add border width
+    borderColor: 'lightgray',  // Set border color
+    borderRadius: 5,  // Add border radius for rounded corners
+    padding: 10,  // Add padding for better spacing
     marginVertical: 10,
   },
   modalTitle: {
@@ -455,11 +469,15 @@ const styles = StyleSheet.create({
 
   categoryDialogContainer: {
     backgroundColor: 'white',
-    height:250,
-    padding: 30,
     borderRadius: 10,
-    marginTop: 100,
-    margin: 40,
+    marginBottom: 'auto', 
+    marginTop: 'auto',// Push the modal to the bottom
+    margin: 20,
+    padding: 20,
+    maxHeight: '80%', // Set a maximum height
+    width: '90%',
+    alignSelf: 'center',
+    justifyContent: 'flex-start', // Align items to the start
   },
 });
 
