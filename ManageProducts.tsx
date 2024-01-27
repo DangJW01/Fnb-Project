@@ -61,6 +61,12 @@ const ManageProductScreen: React.FC = () => {
 
   const addProduct = async () => {
     try {
+      // Check for empty fields
+      if (!newProductName || !newProductDesc || !newProductPrice || !newProductStock || !newProductCategory || !newProductImage) {
+        Alert.alert('Error', 'All fields are required');
+        return;
+      }
+  
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: {
@@ -90,14 +96,31 @@ const ManageProductScreen: React.FC = () => {
   };
 
   const deleteProduct = async (productId: number) => {
-    try {
-      await fetch(`${API_BASE_URL}/${productId}`, {
-        method: 'DELETE',
-      });
-      setProducts(products.filter((product) => product.productId !== productId));
-    } catch (error) {
-      console.error('Error deleting product:', error);
-    }
+    Alert.alert(
+      'Confirm Deletion',
+      'Are you sure you want to delete this product?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              await fetch(`${API_BASE_URL}/${productId}`, {
+                method: 'DELETE',
+              });
+              setProducts(products.filter((product) => product.productId !== productId));
+            } catch (error) {
+              console.error('Error deleting product:', error);
+            }
+          },
+          style: 'destructive',
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const updateProduct = (product: Product) => {
@@ -115,6 +138,11 @@ const ManageProductScreen: React.FC = () => {
 
   const handleUpdate = async () => {
     try {
+      if (!ModalProductName || !ModalProductDesc || !ModalProductPrice || !ModalProductStock || !ModalProductCategory || !ModalProductImage) {
+        Alert.alert('Error', 'All fields are required');
+        return;
+      }
+
       if (!selectedProduct) {
         console.error('Selected product is null');
         return;

@@ -1,85 +1,171 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, FlatList, Button, TextInput } from 'react-native'
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Button, TouchableOpacity, ScrollView } from 'react-native';
+import axios from 'axios';
+import Modal from 'react-native-modal';
+import { Alert } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from './App'; 
 
-const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/'
+const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order';
 
-interface Order {
-  id: number
-  text: string
+interface OrderData {
+  orderId: number;
+  userId: number;
+  totalAmount: string;
+  orderStatus: string;
+  deliveryStatus: string;
+  ratings: string;
+  dtAdded: string;
 }
 
-const ManageOrderScreen = () => {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [newOrderText, setNewOrderText] = useState<string>('')
+type ManageOrderScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ManageOrder'>;
+
+type Props = {
+  navigation: ManageOrderScreenNavigationProp;
+};
+
+const ManageOrderScreen: React.FC<Props> = ({ navigation }) => {
+  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [orderIdToUpdate, setOrderIdToUpdate] = useState<number | null>(null);
+
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    fetchOrderData();
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrderData = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}orders`)
-      const data = await response.json()
-      setOrders(data)
+      const response = await axios.get<OrderData[]>(API_BASE_URL);
+      setOrders(response.data);
     } catch (error) {
-      console.error('Error fetching orders:', error)
+      console.error('Error fetching orders:', error);
     }
-  }
+  };
 
-  const addOrder = async () => {
+  const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: newOrderText }),
-      })
-      const data: Order = await response.json()
-      setOrders([...orders, data])
-      setNewOrderText('')
-    } catch (error) {
-      console.error('Error adding order:', error)
-    }
-  }
+      // Retrieve the order data before updating
+      const currentOrder = orders.find((order) => order.orderId === orderId);
 
-  const deleteOrder = async (orderId: number) => {
-    try {
-      await fetch(`${API_BASE_URL}orders/${orderId}`, {
-        method: 'DELETE',
-      })
-      setOrders(orders.filter((order) => order.id !== orderId))
-    } catch (error) {
-      console.error('Error deleting order:', error)
-    }
-  }
+      if (!currentOrder) {
+        console.error('Order not found for update');
+        return;
+      }
 
+      // Create the JSON body with updated status
+      const updatedOrderData = {
+        orderId: currentOrder.orderId,
+        userId: currentOrder.userId,
+        totalAmount: currentOrder.totalAmount,
+        orderStatus: newStatus, // Updated status
+        deliveryStatus: currentOrder.deliveryStatus,
+        ratings: currentOrder.ratings,
+        dtAdded: currentOrder.dtAdded,
+      };
+
+      // Make the update request with the provided values
+      const response = await axios.put<OrderData>(
+        `${API_BASE_URL}/${newStatus}/${orderId}`,
+        updatedOrderData
+      );
+
+      const updatedOrder: OrderData = response.data;
+
+      setOrders((prevOrders) => {
+        return prevOrders.map((order) =>
+          order.orderId === orderId ? { ...order, ...updatedOrder } : order
+        );
+      });
+
+      Alert.alert('Success', 'Order status updated successfully!');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      Alert.alert('Error', 'Failed to update order status. Please try again.');
+    }
+  };
+
+  const viewOrderDetails = (orderId: number, totalAmount: string) => {
+    // Pass both orderId and totalAmount to the ViewOrderDetail screen
+    navigation.navigate('ViewOrderDetail', { orderId, totalAmount });
+  };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Manage Order</Text>
+      <Text style={styles.title}>Manage Orders</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter new order"
-        value={newOrderText}
-        onChangeText={(text) => setNewOrderText(text)}
-      />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.orderItem}>
+          <Text style={[styles.tableHeader, { flex: 1 }]}>OrderID</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Total Amount</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Order Status</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Delivery Status</Text>
+          <Text style={[styles.tableHeader, { flex: 2 }]}>Actions</Text>
+        </View>
 
-      <Button title="Add Order" onPress={addOrder} />
+        {orders.map((item) => (
+          <View key={item.orderId} style={styles.orderItem}>
+            <Text style={{ flex: 1 }}>{item.orderId}</Text>
+            <Text style={{ flex: 2 }}>{item.totalAmount}</Text>
+            <Text style={{ flex: 2 }}>{item.orderStatus}</Text>
+            <Text style={{ flex: 2 }}>{item.deliveryStatus}</Text>
 
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.orderItem}>
-            <Text style={styles.orderText}>{item.text}</Text>
-            <Button title="Delete" onPress={() => deleteOrder(item.id)} />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => viewOrderDetails(item.orderId, item.totalAmount)}>
+              <Text>Details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                setOrderIdToUpdate(item.orderId);
+                toggleModal();
+              }}>
+              <Text>Manage</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
+
+      <Modal isVisible={isModalVisible}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Adjust Order Status</Text>
+          <View style={styles.modalButtonContainer}>
+            <View style={styles.modalButton}>
+              <Button
+                title="Complete Order"
+                onPress={() => {
+                  updateOrderStatus(orderIdToUpdate || 0, 'complete');
+                  toggleModal();
+                }}
+              />
+            </View>
+            <View style={styles.modalButton}>
+              <Button
+                title="Cancel Order"
+                onPress={() => {
+                  updateOrderStatus(orderIdToUpdate || 0, 'cancel');
+                  toggleModal();
+                }}
+              />
+            </View>
+            <View style={styles.modalButton}>
+              <Button
+                title="Cancel"
+                onPress={() => {
+                  toggleModal();
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -92,16 +178,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 8,
-  },
   orderItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
     padding: 8,
@@ -109,10 +188,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
   },
-  orderText: {
-    flex: 1, // Add this line
-    marginRight: 10,
+  scrollView: {
+    width: '90%',
+    marginStart: 13,
+    marginEnd: 13,
   },
-})
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
 
-export default ManageOrderScreen
+  modalButton: {
+    flex: 0.5, // Equal width for each button
+    margin: 1,
+  },
+  tableHeader: {
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: 'lightblue',
+    padding: 10,
+    margin: 3,
+    borderRadius: 5,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+});
+
+export default ManageOrderScreen;

@@ -17,7 +17,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text>This Home Screen</Text>
+   
       <View style={styles.cardContainer}>
         <TouchableOpacity
           style={styles.card}
@@ -39,7 +39,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigateToAdminPage('Category')}
+          onPress={() => navigateToAdminPage('ManageCategory')}
         >
           <Text style={styles.cardText}>Category</Text>
         </TouchableOpacity>

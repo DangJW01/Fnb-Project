@@ -43,6 +43,11 @@ const ManageUsersScreen: React.FC = () => {
 
   const addUser = async () => {
     try {
+
+      if (!newUserEmail.trim() || !newUserPassword.trim()) {
+        Alert.alert('Error', 'Email and Password cannot be empty.');
+        return;
+      }
       const response = await axios.post<UserData>(API_BASE_URL, {
         email: newUserEmail,
         password: newUserPassword,
@@ -58,8 +63,25 @@ const ManageUsersScreen: React.FC = () => {
 
   const deleteUser = async (userId: number) => {
     try {
-      await axios.delete(`${API_BASE_URL}/${userId}`);
-      setUsers(users.filter((user) => user.userId !== userId));
+      // Display a confirmation alert before deleting
+      Alert.alert(
+        'Confirm Deletion',
+        'Are you sure you want to delete this user?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Yes',
+            onPress: async () => {
+              await axios.delete(`${API_BASE_URL}/${userId}`);
+              setUsers(users.filter((user) => user.userId !== userId));
+            },
+          },
+        ],
+        { cancelable: false }
+      );
     } catch (error) {
       console.error('Error deleting user:', error);
     }
@@ -93,6 +115,10 @@ const ManageUsersScreen: React.FC = () => {
     try {
       if (userIdToUpdate === null) {
         console.error('User ID to update is null');
+        return;
+      }
+      if (!updatedEmail.trim() || !updatedPassword.trim()) {
+        Alert.alert('Error', 'Email and Password cannot be empty.');
         return;
       }
   
