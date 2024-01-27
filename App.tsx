@@ -19,7 +19,8 @@ export type RootStackParamList = {
   ManageUsers: undefined;
   ManageProducts: undefined;
   ManageCategory: undefined;
-  ViewOrderDetail: { orderId: number };
+  ViewOrderDetail: { orderId: number; totalAmount?: string };
+
 };
 
 const Stack = createStackNavigator<RootStackParamList>();

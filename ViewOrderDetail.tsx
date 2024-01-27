@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import axios from 'axios';
 
@@ -26,7 +26,7 @@ interface Props {
   navigation: ViewOrderDetailScreenNavigationProp;
 }
 
-const ViewOrderDetail: React.FC<Props> = ({ route }) => {
+const ViewOrderDetail: React.FC<Props> = ({ route, navigation }) => {
   const { orderId, totalAmount } = route.params;
   const [orderDetails, setOrderDetails] = useState<OrderDetails[]>([]);
 
