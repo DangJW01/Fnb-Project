@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const CartPage: React.FC = () => {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [productDetails, setProductDetails] = useState<{ [key: number]: any }>({});
   const userId = 5; // Dummy user ID
+
+  // State to keep track of the total amount
+  const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const fetchCartDetails = async () => {
     try {
@@ -31,6 +34,10 @@ const CartPage: React.FC = () => {
       });
 
       setProductDetails(detailsObject);
+
+      // Calculate and set the total amount
+      const total = userCartItems.reduce((acc, item) => acc + parseFloat(item.totalAmount), 0);
+      setTotalAmount(total);
     } catch (error) {
       console.error('Error fetching cart details:', error);
     }
@@ -66,8 +73,47 @@ const CartPage: React.FC = () => {
 
       // Remove the deleted item from the state
       setCartItems((prevCartItems) => prevCartItems.filter((item) => item.cartId !== cartId));
+
+      // Recalculate and set the total amount after deletion
+      const total = cartItems.reduce((acc, item) => acc + parseFloat(item.totalAmount), 0);
+      setTotalAmount(total);
     } catch (error) {
       console.error('Error deleting item:', error);
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      const response = await fetch(`http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order/${userId}/${totalAmount}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId.toString(),
+          totalAmount: totalAmount.toFixed(2),
+          orderStatus: '', // You might want to set appropriate values here
+          deliveryStatus: '',
+          ratings: '',
+          dtAdded: '',
+        }),
+      });
+  
+      if (!response.ok) {
+        console.error(`Failed to checkout. Status: ${response.status}`);
+        return;
+      }
+  
+      // Display success message
+      Alert.alert('Success', 'Checkout successful');
+  
+      // Clear the cart after successful checkout
+      setCartItems([]);
+      setTotalAmount(0);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      // Display error message
+      Alert.alert('Error', 'Failed to checkout');
     }
   };
 
@@ -103,6 +149,12 @@ const CartPage: React.FC = () => {
           </View>
         );
       })}
+      <View style={styles.totalContainer}>
+        <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
+        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+          <Text style={styles.checkoutButtonText}>Checkout</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -162,6 +214,26 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     marginLeft: 10,
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  checkoutButton: {
+    backgroundColor: 'green',
+    padding: 10,
+    borderRadius: 5,
+  },
+  checkoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

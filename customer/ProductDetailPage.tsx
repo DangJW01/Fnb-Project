@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome'; 
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Dimensions, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 interface ProductDetailPageProps {
   route: { params: { productId: number } };
@@ -10,12 +10,13 @@ interface ProductDetail {
   name: string;
   desc: string;
   price: string;
-  stock: string;
   category: string;
   image: string;
 }
 
 const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/product/';
+
+const windowWidth = Dimensions.get('window').width;
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
   const [productDetail, setProductDetail] = useState<ProductDetail | null>(null);
@@ -73,10 +74,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
       .then((response) => response.json())
       .then((data) => {
         console.log('Product added to cart:', data);
+        // Display success message
+        Alert.alert('Success', 'Product added to cart successfully');
         // You can add additional logic or navigation here
       })
       .catch((error) => {
         console.error('Error adding product to cart:', error);
+        // Display error message
+        Alert.alert('Error', 'Failed to add product to cart');
       });
   };
 
@@ -85,15 +90,28 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
       {productDetail ? (
         <>
           <Image source={{ uri: productDetail.image }} style={styles.productImage} />
-          <Text style={styles.productTitle}>{productDetail.name}</Text>
-          <Text style={styles.productDesc}>{productDetail.desc}</Text>
-          <Text style={styles.productPrice}>Price: ${productDetail.price}</Text>
-          <Text style={styles.productStock}>Stock: {productDetail.stock}</Text>
-          <Text style={styles.productCategory}>Category: {productDetail.category}</Text>
+          <View style={styles.productInfoContainer}>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Product Name</Text>
+              <Text style={styles.tableCell}>{productDetail.name}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Description</Text>
+              <Text style={styles.tableCell}>{productDetail.desc}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Price</Text>
+              <Text style={styles.tableCell}>${productDetail.price}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Category</Text>
+              <Text style={styles.tableCell}>{productDetail.category}</Text>
+            </View>
+          </View>
 
           <View style={styles.quantityContainer}>
             <TouchableOpacity onPress={() => handleQuantityChange((parseInt(quantity, 10) - 1).toString())}>
-              <Icon name="minus" size={20} color="black" />
+              <Icon name="minus" size={30} color="black" />
             </TouchableOpacity>
             <TextInput
               style={styles.quantityInput}
@@ -102,7 +120,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
               onChangeText={handleQuantityChange}
             />
             <TouchableOpacity onPress={() => handleQuantityChange((parseInt(quantity, 10) + 1).toString())}>
-              <Icon name="plus" size={20} color="black" />
+              <Icon name="plus" size={30} color="black" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
@@ -134,26 +152,27 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
   },
-  productTitle: {
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  productDesc: {
+  productInfoContainer: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    padding: 10,
+    borderRadius: 5,
+    width: windowWidth - 20,
     marginVertical: 10,
-    textAlign: 'center',
   },
-  productPrice: {
-    fontSize: 16,
-    color: 'green',
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  productStock: {
+  tableCellHeader: {
     fontSize: 16,
-    color: 'darkorange',
+    fontWeight: 'bold',
+    marginRight: 10,
   },
-  productCategory: {
+  tableCell: {
+    flex: 1,
     fontSize: 16,
-    color: 'blue',
   },
   quantityContainer: {
     flexDirection: 'row',
@@ -163,13 +182,15 @@ const styles = StyleSheet.create({
   quantityInput: {
     borderWidth: 1,
     borderColor: 'gray',
-    paddingHorizontal: 8,
-    fontSize: 16,
+    paddingHorizontal: 20,
+    fontSize: 20,
   },
   addToCartButton: {
-    marginTop: 20,
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
     backgroundColor: 'green',
-    padding: 10,
+    padding: 15,
     borderRadius: 5,
   },
   addToCartButtonText: {

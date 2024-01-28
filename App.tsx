@@ -1,3 +1,5 @@
+// App.tsx
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -9,7 +11,8 @@ import ManageProducts from './admin/ManageProducts';
 import ManageCategory from './admin/ManageCategory';
 import ViewOrderDetail from './ViewOrderDetail';
 import CustomerHomePage from './customer/Homepage';
-import ProductDetailPage from './customer/ProductDetailPage'; // Import the new screen
+import ProductDetailPage from './customer/ProductDetailPage';
+
 
 // Define the RootStackParamList
 export type RootStackParamList = {
@@ -20,8 +23,8 @@ export type RootStackParamList = {
   ManageProducts: undefined;
   ManageCategory: undefined;
   CustomerHomePage: undefined;
+  ProductDetailPage: undefined;
   ViewOrderDetail: { orderId: number; totalAmount?: string };
-  ProductDetailPage: { productId: number }; // Add the new screen
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -37,8 +40,8 @@ const App = () => {
         <Stack.Screen name="ManageUsers" component={ManageUsers} />
         <Stack.Screen name="ManageProducts" component={ManageProducts} />
         <Stack.Screen name="ManageCategory" component={ManageCategory} />
+        <Stack.Screen name="ProductDetailPage" component={ProductDetailPage} />
         <Stack.Screen name="ViewOrderDetail" component={ViewOrderDetail} />
-        <Stack.Screen name="ProductDetailPage" component={ProductDetailPage} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
