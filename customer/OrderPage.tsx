@@ -1,15 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, TouchableOpacity, Text, View, Image, Modal, Button, StyleSheet, ActivityIndicator} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
+
 
 
 const OrderPage: React.FC = () => {
@@ -19,7 +12,15 @@ const OrderPage: React.FC = () => {
   const [productDetails, setProductDetails] = useState<{ [key: number]: any }>({});
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const [isModalVisible, setModalVisible] = useState(false);
+  const openModal = () => {
+    setModalVisible(true);
+  };
 
+  const closeModal = () => {
+    setModalVisible(false);
+  };
   const fetchOrderData = async () => {
     setLoading(true);
     try {
@@ -61,6 +62,7 @@ const OrderPage: React.FC = () => {
           ...detail,
           orderStatus: orderStatusData.orderStatus,
           deliveryStatus: orderStatusData.deliveryStatus,
+          ratings: orderStatusData.ratings,
         }));
       });
 
@@ -107,7 +109,13 @@ const OrderPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          orderId: orderId,
+          totalAmount: totalAmount,
+          orderStatus: orderStatus,
+          deliveryStatus: deliveryStatus,
           ratings: rating.toString(),
+          dtAdded: order.dtAddded,
+
         }),
       });
 
@@ -136,56 +144,71 @@ const OrderPage: React.FC = () => {
       {orderIds.map((orderId) => {
         const orderStatus = orderDetails.find((detail) => detail.orderId === orderId)?.orderStatus;
         const deliveryStatus = orderDetails.find((detail) => detail.orderId === orderId)?.deliveryStatus;
-        const orderRating = orderDetails.find((detail) => detail.orderId === orderId)?.ratings;
+        const ratings = orderDetails.find((detail) => detail.orderId === orderId)?.ratings;
 
         return (
           <View key={orderId} style={styles.orderBox}>
             <Text style={styles.orderHeader}>Order ID: {orderId}</Text>
             <Text>Order Status: {orderStatus}</Text>
             <Text>Delivery Status: {deliveryStatus}</Text>
+            <Text>Rating: {ratings}</Text>
 
-            {/* Conditionally render the Picker for rating if order is Completed */}
-            {orderStatus === 'Completed' && deliveryStatus === 'Completed' && orderRating === 'Not given yet' && (
+           {orderDetails
+            .filter((detail) => detail.orderId === orderId)
+            .map((detail) => (
+              <View key={detail.orderDetailsId} style={styles.productDetails}>
+                <Image source={{ uri: productDetails[detail.productId]?.image }} style={styles.productImage} />
+                <View>
+                  <Text>{productDetails[detail.productId]?.name}</Text>
+                  <Text>Quantity: {detail.quantity}</Text>
+                  <Text>Price: ${detail.price}</Text>
+                  <Text>Total Amount: ${detail.totalAmount}</Text>
+                </View>
+              </View>
+          ))}
+          {orderStatus === 'Completed' && deliveryStatus === 'Delivered' && ratings === 'Not given yet' && (
               <>
-                <Text>Please rate your order:</Text>
-                <Picker
-                  selectedValue={selectedRating}
-                  onValueChange={(itemValue: number | null) => setSelectedRating(itemValue)}
-                >
-                  <Picker.Item label="Select Rating" value={null} />
-                  <Picker.Item label="1" value={1} />
-                  <Picker.Item label="2" value={2} />
-                  <Picker.Item label="3" value={3} />
-                  <Picker.Item label="4" value={4} />
-                  <Picker.Item label="5" value={5} />
-                </Picker>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (selectedRating !== null) {
-                      updateRating(orderId, selectedRating);
-                      setSelectedRating(null);
-                    }
-                  }}
-                  style={styles.rateButton}
-                >
+                <Text style={{ paddingTop: 15, fontWeight: 'bold' }}>Please rate your order:</Text>
+                <TouchableOpacity onPress={openModal} style={styles.rateButton}>
                   <Text style={styles.rateButtonText}>Rate</Text>
                 </TouchableOpacity>
+
+                {/* Modal */}
+                <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      <Text>Please rate your order:</Text>
+                      <Picker
+                        selectedValue={selectedRating}
+                        onValueChange={(itemValue: number | null) => setSelectedRating(itemValue)}
+                      >
+                        <Picker.Item label="Select Rating" value={null} />
+                        <Picker.Item label="1" value={1} />
+                        <Picker.Item label="2" value={2} />
+                        <Picker.Item label="3" value={3} />
+                        <Picker.Item label="4" value={4} />
+                        <Picker.Item label="5" value={5} />
+                      </Picker>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (selectedRating !== null) {
+                            updateRating(orderId, selectedRating);
+                            setSelectedRating(null);
+                            closeModal();
+                          }
+                        }}
+                        style={styles.rateButton}
+                      >
+                        <Text style={styles.rateButtonText}>Rate</Text>
+                      </TouchableOpacity>
+
+                      <Button title="Close" onPress={closeModal} />
+                    </View>
+                  </View>
+                </Modal>
               </>
             )}
-
-            {orderDetails
-              .filter((detail) => detail.orderId === orderId)
-              .map((detail) => (
-                <View key={detail.orderDetailsId} style={styles.productDetails}>
-                  <Image source={{ uri: productDetails[detail.productId]?.image }} style={styles.productImage} />
-                  <View>
-                    <Text>{productDetails[detail.productId]?.name}</Text>
-                    <Text>Quantity: {detail.quantity}</Text>
-                    <Text>Price: ${detail.price}</Text>
-                    <Text>Total Amount: ${detail.totalAmount}</Text>
-                  </View>
-                </View>
-              ))}
           </View>
         );
       })}

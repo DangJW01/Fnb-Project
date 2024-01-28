@@ -3,10 +3,10 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } fr
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const CartPage: React.FC = () => {
+const CartPage: React.FC = ({ route }) => {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [productDetails, setProductDetails] = useState<{ [key: number]: any }>({});
-  const userId = 5; // Dummy user ID
+  const { userId } = route.params ?? {}; 
 
   // State to keep track of the total amount
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -127,12 +127,15 @@ const CartPage: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Cart Page</Text>
-      {cartItems.map((item) => {
-        const productDetail = productDetails[item.productId];
+      {cartItems.length === 0 ? (
+        <Text style={styles.emptyCartText}>Your cart is empty.</Text>
+      ) : (
+        cartItems.map((item) => {
+          const productDetail = productDetails[item.productId];
 
-        if (!productDetail) {
-          return null;
-        }
+          if (!productDetail) {
+            return null;
+          }
 
         return (
           <View key={item.cartId} style={styles.cartItem}>
@@ -148,13 +151,16 @@ const CartPage: React.FC = () => {
             </TouchableOpacity>
           </View>
         );
-      })}
+      })
+      )}
+      {cartItems.length > 0 && (
       <View style={styles.totalContainer}>
         <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
         <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
           <Text style={styles.checkoutButtonText}>Checkout</Text>
         </TouchableOpacity>
       </View>
+      )}
     </ScrollView>
   );
 };
@@ -235,6 +241,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  emptyCartText: {
+    fontSize: 16,
+    color: 'gray',
+  },
 });
+
 
 export default CartPage;

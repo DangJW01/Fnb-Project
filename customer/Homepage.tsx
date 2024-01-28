@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, useWindowDim
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-
 import CartPage from '../customer/CartPage';
 import OrderPage from '../customer/OrderPage';
 
