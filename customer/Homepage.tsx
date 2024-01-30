@@ -6,6 +6,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import CartPage from '../customer/CartPage';
 import OrderPage from '../customer/OrderPage';
 
+interface HomePageProps {
+  route: {
+    params: {
+      userId: number;
+    };
+  };
+   navigation: any;
+}
 const Tab = createBottomTabNavigator();
 
 const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/product';
@@ -17,10 +25,17 @@ interface Product {
   image: string;
 }
 
-const HomePage: React.FC = () => {
+
+
+const HomePageComponent: React.FC<HomePageProps> = ({ route }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const windowWidth = useWindowDimensions().width;
   const navigation = useNavigation();
+
+  // Access userId from route.params
+  const userId = route.params?.userId;
+
+  console.log('Fetched userId:', userId);
 
   useEffect(() => {
     fetchProducts();
@@ -60,7 +75,7 @@ const HomePage: React.FC = () => {
   );
 
   const handleProductPress = (productId: number) => {
-    navigation.navigate('ProductDetailPage', { productId });
+    navigation.navigate('ProductDetailPage', { productId, userId } as any);
   };
 
   return (
@@ -71,7 +86,6 @@ const HomePage: React.FC = () => {
         numColumns={calculateNumColumns()}
         renderItem={renderProductItem}
         onLayout={() => {
-          // Force a fresh render when the layout changes
           setProducts([...products]);
         }}
       />
@@ -107,9 +121,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'green',
   },
+  logoutButton: {
+    marginRight: 15,
+    padding: 10,
+  },
+  logoutButtonText: {
+    color: 'blue',
+  },
 });
 
-const TabNavigator: React.FC = () => {
+const HomePage: React.FC<HomePageProps> = ({ route, navigation }) => {
+  const userId = route.params?.userId;
+
+  const handleLogout = () => {
+    // Perform logout actions if needed
+  
+    // Navigate to the Login page and reset the navigation stack
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -124,18 +157,31 @@ const TabNavigator: React.FC = () => {
             iconName = 'list-outline';
           }
 
-          // You can add more icons based on your requirements
-
+          
           return <Icon name={iconName} size={size} color={color} />;
+        },
+        headerRight: () => {
+          // Render the logout button in the header
+          return (
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          );
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomePage} />
-      <Tab.Screen name="Cart" component={CartPage} />
-      <Tab.Screen name="Order" component={OrderPage} />
+      <Tab.Screen name="Home">
+        {(props) => <HomePageComponent {...props} route={route} />}
+      </Tab.Screen>
+      <Tab.Screen name="Cart">
+        {(props) => <CartPage {...props} route={route} />}
+      </Tab.Screen>
+      <Tab.Screen name="Order">
+        {(props) => <OrderPage {...props} userId={userId} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };
 
+export default HomePage;
 
-export default TabNavigator;

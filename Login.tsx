@@ -12,18 +12,18 @@ import { useNavigation, CommonActions } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from 'axios';
 
-const Login = () => {
+const Login: React.FC = () => {
   const API_BASE_URL = 'http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/user';
   const [email, setEmail] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
 
-  const validateEmail = (inputText) => {
+  const validateEmail = (inputText: string) => {
     // Simple email validation using a regular expression
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(inputText);
   };
 
-  const handleEmailChange = (text) => {
+  const handleEmailChange = (text: string) => {
     setEmail(text);
     setIsValidEmail(validateEmail(text));
   };
@@ -34,14 +34,16 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
-  
+
   const navigation = useNavigation();
 
   const navigateToRegister = () => {
     navigation.navigate('Register');
   };
+
   const [loginSuccess, setLoginSuccess] = useState(false);
-  const [loginError, setLoginError] = useState(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const handleLoginPress = async () => {
     try {
       if (!isValidEmail) {
@@ -52,44 +54,58 @@ const Login = () => {
         console.log("Password is required");
         return;
       }
-  
+
       const response = await axios.get(`${API_BASE_URL}`);
-    const responseData = response.data;
-    const foundUser = responseData.find(user => user.email === email && user.password === password);
-    if (foundUser) {
-      console.log("Login successful");
-      setLoginSuccess(true);
-      setLoginError(null);
-      const userId = foundUser.userId; 
-      console.log("User ID:", userId);
-      setTimeout(() => {
-        if (foundUser.userLevel === "1") {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'Home' , params: { userId } }],
-            })
-          );
-        } else {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'CustomerHomePage' , params: { userId } }],
-            })
-          );
-        }
-      }, 2000);
-    } else {
-      console.log("Invalid email or password");
-      setLoginSuccess(false);
-      setLoginError("Invalid email or password");
-    }
-  } catch (error) {
+      const responseData = response.data;
+      const foundUser = responseData.find((user: any) => user.email === email && user.password === password);
+
+      if (foundUser) {
+        console.log("Login successful");
+        setLoginSuccess(true);
+        setLoginError(null);
+        const userId = foundUser.userId;
+        console.log("User ID:", userId);
+  
+        setTimeout(() => {
+          if (foundUser.userLevel === "1") {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'Home',
+                    params: { userId }, // Pass userId as a parameter
+                  },
+                ],
+              })
+            );
+          } else {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'CustomerHomePage',
+                    params: { userId }, // Pass userId as a parameter
+                  },
+                  
+                ],
+              })
+            );
+            
+          }
+        }, 2000);
+      } else {
+        console.log("Invalid email or password");
+        setLoginSuccess(false);
+        setLoginError("Invalid email or password");
+      }
+    } catch (error) {
       console.error("Login failed:", error.message);
       setLoginError(error.message);
       setLoginSuccess(false);
     }
-  };  
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
@@ -103,7 +119,7 @@ const Login = () => {
         />
       </View>
       <View style={styles.inCont}>
-      <MaterialCommunityIcons
+        <MaterialCommunityIcons
           name="email"
           size={30}
           style={{ marginRight: 10 }}

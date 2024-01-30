@@ -1,26 +1,51 @@
 import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Text, View, Image, Modal, Button, StyleSheet, ActivityIndicator} from 'react-native';
+import { ScrollView, TouchableOpacity, Text, View, Image, Modal, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Picker } from '@react-native-picker/picker';
 
+interface OrderPageProps {
+  userId: number;
+}
 
-
-const OrderPage: React.FC = () => {
-  const userId = 5; // Replace with your actual userId
+const OrderPage: React.FC<OrderPageProps> = ({ userId }) => {
   const [orderIds, setOrderIds] = useState<number[]>([]);
   const [orderDetails, setOrderDetails] = useState<any[]>([]);
   const [productDetails, setProductDetails] = useState<{ [key: number]: any }>({});
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const [isModalVisible, setModalVisible] = useState(false);
+
   const openModal = () => {
     setModalVisible(true);
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Current userId:', userId);
+      fetchOrderData();
+    }, [userId])
+  );
+
+  
+
+  const renderRatingButtons = () => (
+    <View style={styles.ratingContainer}>
+      {[1, 2, 3, 4, 5].map((rating) => (
+        <TouchableOpacity
+          key={rating}
+          style={[styles.ratingButton, selectedRating === rating && styles.selectedRating]}
+          onPress={() => setSelectedRating(rating)}
+        >
+          <Text style={styles.ratingButtonText}>{rating}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   const closeModal = () => {
     setModalVisible(false);
   };
+
   const fetchOrderData = async () => {
     setLoading(true);
     try {
@@ -103,37 +128,43 @@ const OrderPage: React.FC = () => {
   const updateRating = async (orderId: number, rating: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order/${orderId}`, {
+      // Step 1: Fetch order details using GET
+      const orderDetailsResponse = await fetch(`http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order/${orderId}`);
+      if (!orderDetailsResponse.ok) {
+        console.error(`Failed to fetch order details for order ${orderId}. Status: ${orderDetailsResponse.status}`);
+        return;
+      }
+      const orderDetailsData = await orderDetailsResponse.json();
+
+      // Step 2: Prepare updated data for PUT
+      const updatedOrderData = {
+        ...orderDetailsData,
+        ratings: rating.toString(),
+        dtAdded: '', // Emptying dtAdded
+      };
+
+      // Step 3: Update the rating using PUT
+      const updateResponse = await fetch(`http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/order/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          orderId: orderId,
-          totalAmount: totalAmount,
-          orderStatus: orderStatus,
-          deliveryStatus: deliveryStatus,
-          ratings: rating.toString(),
-          dtAdded: order.dtAddded,
-
-        }),
+        body: JSON.stringify(updatedOrderData),
       });
 
-      if (!response.ok) {
-        console.error(`Failed to update rating. Status: ${response.status}`);
+      if (!updateResponse.ok) {
+        console.error(`Failed to update rating. Status: ${updateResponse.status}`);
+        return;
       }
+
+      // Show success message
+      Alert.alert('Success', 'Rating has been updated successfully.');
     } catch (error) {
       console.error('Error updating rating:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchOrderData();
-    }, [])
-  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -153,20 +184,20 @@ const OrderPage: React.FC = () => {
             <Text>Delivery Status: {deliveryStatus}</Text>
             <Text>Rating: {ratings}</Text>
 
-           {orderDetails
-            .filter((detail) => detail.orderId === orderId)
-            .map((detail) => (
-              <View key={detail.orderDetailsId} style={styles.productDetails}>
-                <Image source={{ uri: productDetails[detail.productId]?.image }} style={styles.productImage} />
-                <View>
-                  <Text>{productDetails[detail.productId]?.name}</Text>
-                  <Text>Quantity: {detail.quantity}</Text>
-                  <Text>Price: ${detail.price}</Text>
-                  <Text>Total Amount: ${detail.totalAmount}</Text>
+            {orderDetails
+              .filter((detail) => detail.orderId === orderId)
+              .map((detail) => (
+                <View key={detail.orderDetailsId} style={styles.productDetails}>
+                  <Image source={{ uri: productDetails[detail.productId]?.image }} style={styles.productImage} />
+                  <View>
+                    <Text>{productDetails[detail.productId]?.name}</Text>
+                    <Text>Quantity: {detail.quantity}</Text>
+                    <Text>Price: ${detail.price}</Text>
+                    <Text>Total Amount: ${detail.totalAmount}</Text>
+                  </View>
                 </View>
-              </View>
-          ))}
-          {orderStatus === 'Completed' && deliveryStatus === 'Delivered' && ratings === 'Not given yet' && (
+              ))}
+            {orderStatus === 'Completed' && deliveryStatus === 'Delivered' && ratings === 'Not given yet' && (
               <>
                 <Text style={{ paddingTop: 15, fontWeight: 'bold' }}>Please rate your order:</Text>
                 <TouchableOpacity onPress={openModal} style={styles.rateButton}>
@@ -178,28 +209,18 @@ const OrderPage: React.FC = () => {
                   <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                       <Text>Please rate your order:</Text>
-                      <Picker
-                        selectedValue={selectedRating}
-                        onValueChange={(itemValue: number | null) => setSelectedRating(itemValue)}
-                      >
-                        <Picker.Item label="Select Rating" value={null} />
-                        <Picker.Item label="1" value={1} />
-                        <Picker.Item label="2" value={2} />
-                        <Picker.Item label="3" value={3} />
-                        <Picker.Item label="4" value={4} />
-                        <Picker.Item label="5" value={5} />
-                      </Picker>
+                      {renderRatingButtons()}
 
                       <TouchableOpacity
-                        onPress={() => {
-                          if (selectedRating !== null) {
-                            updateRating(orderId, selectedRating);
-                            setSelectedRating(null);
-                            closeModal();
-                          }
-                        }}
-                        style={styles.rateButton}
-                      >
+                    onPress={() => {
+                      if (selectedRating !== null) {
+                        updateRating(orderId, selectedRating);
+                        setSelectedRating(null);
+                        closeModal();
+                      }
+                    }}
+                    style={styles.rateButton}
+                  >
                         <Text style={styles.rateButtonText}>Rate</Text>
                       </TouchableOpacity>
 
@@ -219,6 +240,24 @@ const OrderPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  ratingButton: {
+    backgroundColor: 'lightblue',
+    padding: 10,
+    borderRadius: 5,
+    width: 40,
+    alignItems: 'center',
+  },
+  selectedRating: {
+    backgroundColor: 'green',
+  },
+  ratingButtonText: {
+    color: 'black',
   },
   orderBox: {
     marginBottom: 20,
@@ -260,6 +299,17 @@ const styles = StyleSheet.create({
   },
   rateButtonText: {
     color: 'black',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
   },
 });
 

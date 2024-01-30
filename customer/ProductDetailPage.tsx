@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Dimensions,
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 interface ProductDetailPageProps {
-  route: { params: { productId: number } };
+  route: { params: { productId: number; userId: number } }; // Add userId to route params
 }
 
 interface ProductDetail {
@@ -23,7 +23,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
   const [quantity, setQuantity] = useState('1'); // Default quantity is 1
 
   useEffect(() => {
-    const { productId } = route.params;
+    const { productId, userId } = route.params;
+    console.log('UserId:', userId); // Log userId to the console
     fetchProductDetail(productId);
   }, [route.params]);
 
@@ -50,9 +51,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ route }) => {
   };
 
   const handleAddToCart = () => {
-    // Assuming productId and userId are available
-    const { productId } = route.params;
-    const userId = 5; // Dummy user ID
+    const { productId, userId } = route.params; // Retrieve userId from route params
+    console.log('UserId in addToCart:', userId); // Log userId to the console
     const cartApiUrl = `http://backendfoodorder-prod.us-east-1.elasticbeanstalk.com/api/cart/${productId}/${userId}`;
 
     // Assuming productDetail contains price

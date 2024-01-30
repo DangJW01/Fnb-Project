@@ -15,9 +15,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     navigation.navigate(screenName);
   };
 
+  const handleLogout = () => {
+    // Perform logout actions if needed
+  
+    // Navigate to the Login page and reset the navigation stack
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
   return (
     <View style={styles.container}>
-   
       <View style={styles.cardContainer}>
         <TouchableOpacity
           style={styles.card}
@@ -44,15 +53,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Text style={styles.cardText}>Category</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
   cardContainer: {
     marginTop: 20,
@@ -73,6 +87,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 10,
+  },
+  logoutButtonText: {
+    color: 'blue',
   },
 });
 

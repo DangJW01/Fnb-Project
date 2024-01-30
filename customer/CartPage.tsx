@@ -3,10 +3,20 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } fr
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const CartPage: React.FC = ({ route }) => {
+const CartPage: React.FC<any> = ({ route }) => {
+  const userId = route.params?.userId;
+
+  // State to keep track of cart items
   const [cartItems, setCartItems] = useState<any[]>([]);
+  // State to keep track of product details
   const [productDetails, setProductDetails] = useState<{ [key: number]: any }>({});
-  const { userId } = route.params ?? {}; 
+
+  useEffect(() => {
+    console.log('userId in CartPage:', userId);
+    if (userId) {
+      fetchCartDetails();
+    }
+  }, [userId]);
 
   // State to keep track of the total amount
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -137,29 +147,29 @@ const CartPage: React.FC = ({ route }) => {
             return null;
           }
 
-        return (
-          <View key={item.cartId} style={styles.cartItem}>
-            <Image source={{ uri: productDetail.image }} style={styles.productImage} />
-            <View style={styles.productDetails}>
-              <Text style={styles.productName}>{productDetail.name}</Text>
-              <Text style={styles.price}>Price: ${productDetail.price}</Text>
-              <Text style={styles.quantity}>Quantity: {item.quantity}</Text>
-              <Text style={styles.totalAmount}>Total Amount: ${item.totalAmount}</Text>
+          return (
+            <View key={item.cartId} style={styles.cartItem}>
+              <Image source={{ uri: productDetail.image }} style={styles.productImage} />
+              <View style={styles.productDetails}>
+                <Text style={styles.productName}>{productDetail.name}</Text>
+                <Text style={styles.price}>Price: ${productDetail.price}</Text>
+                <Text style={styles.quantity}>Quantity: {item.quantity}</Text>
+                <Text style={styles.totalAmount}>Total Amount: ${item.totalAmount}</Text>
+              </View>
+              <TouchableOpacity onPress={() => handleDelete(item.cartId)} style={styles.deleteButton}>
+                <Icon name="trash-outline" size={25} color="red" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => handleDelete(item.cartId)} style={styles.deleteButton}>
-              <Icon name="trash-outline" size={25} color="red" />
-            </TouchableOpacity>
-          </View>
-        );
-      })
+          );
+        })
       )}
       {cartItems.length > 0 && (
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-          <Text style={styles.checkoutButtonText}>Checkout</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
+          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+            <Text style={styles.checkoutButtonText}>Checkout</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </ScrollView>
   );
@@ -246,6 +256,5 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
 });
-
 
 export default CartPage;
