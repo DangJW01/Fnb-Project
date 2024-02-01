@@ -157,6 +157,7 @@ const OrderPage: React.FC<OrderPageProps> = ({ userId }) => {
         return;
       }
 
+      fetchOrderData();
       // Show success message
       Alert.alert('Success', 'Rating has been updated successfully.');
     } catch (error) {
