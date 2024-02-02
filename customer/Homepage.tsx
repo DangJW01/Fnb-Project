@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginStart: 300,
     marginTop: 20,
-    marginBottom: 20, // Adjust the right value as needed
+    marginBottom: 20, 
     backgroundColor: "#baa27b",
     padding: 8,
     borderRadius: 10,
