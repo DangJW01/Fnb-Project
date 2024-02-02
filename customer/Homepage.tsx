@@ -22,6 +22,7 @@ interface HomePageProps {
   };
   navigation: any;
 }
+
 const Tab = createBottomTabNavigator();
 
 const API_BASE_URL =
@@ -33,6 +34,29 @@ interface Product {
   price: string;
   image: string;
 }
+
+const HomeContent: React.FC<HomePageProps> = ({ route, navigation }) => {
+  const userId = route.params?.userId;
+
+  const handleLogout = () => {
+    // Perform logout actions if needed
+
+    // Navigate to the Login page and reset the navigation stack
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  };
+
+  return (
+    <View style={styles.homeContentContainer}>
+    
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const HomePageComponent: React.FC<HomePageProps> = ({ route }) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -100,11 +124,58 @@ const HomePageComponent: React.FC<HomePageProps> = ({ route }) => {
   );
 };
 
+const HomePage: React.FC<HomePageProps> = ({ route, navigation }) => {
+  const userId = route.params?.userId;
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+
+          if (route.name === "Home") {
+            iconName = "home-outline";
+          } else if (route.name === "Cart") {
+            iconName = "cart-outline";
+          } else if (route.name === "Order") {
+            iconName = "list-outline";
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Home">
+        {(props) => (
+          <View style={styles.container}>
+            <HomeContent {...props} route={route} navigation={navigation} />
+            <HomePageComponent {...props} route={route} />
+          </View>
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="Cart">
+        {(props) => <CartPage {...props} route={route} />}
+      </Tab.Screen>
+      <Tab.Screen name="Order">
+        {(props) => <OrderPage {...props} userId={userId} />}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+  },
+  homeContentContainer: {
+    flexDirection: "column",
     alignItems: "center",
+    justifyContent: "flex-start", // Align children to the start of the container
+  },
+  homeText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
   productItem: {
     marginHorizontal: 3,
@@ -123,18 +194,12 @@ const styles = StyleSheet.create({
       height: 10,
     },
   },
-  productTextCont: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   productImage: {
     width: "100%",
     height: 100,
     resizeMode: "cover",
     borderRadius: 8,
   },
-
   productTitle: {
     fontSize: 14,
     fontWeight: "bold",
@@ -146,8 +211,10 @@ const styles = StyleSheet.create({
     color: "#ffd289",
   },
   logoutButton: {
+    marginStart: 300,
+    marginTop: 20,
+    marginBottom: 20, // Adjust the right value as needed
     backgroundColor: "#baa27b",
-    marginRight: "5%",
     padding: 8,
     borderRadius: 10,
   },
@@ -157,60 +224,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
-
-const HomePage: React.FC<HomePageProps> = ({ route, navigation }) => {
-  const userId = route.params?.userId;
-
-  const handleLogout = () => {
-    // Perform logout actions if needed
-
-    // Navigate to the Login page and reset the navigation stack
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Login" }],
-    });
-  };
-
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-
-          if (route.name === "Home") {
-            iconName = "home-outline";
-          } else if (route.name === "Cart") {
-            iconName = "cart-outline";
-          } else if (route.name === "Order") {
-            iconName = "list-outline";
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        headerRight: () => {
-          // Render the logout button in the header
-          return (
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
-          );
-        },
-      })}
-    >
-      <Tab.Screen name="Home">
-        {(props) => <HomePageComponent {...props} route={route} />}
-      </Tab.Screen>
-      <Tab.Screen name="Cart">
-        {(props) => <CartPage {...props} route={route} />}
-      </Tab.Screen>
-      <Tab.Screen name="Order">
-        {(props) => <OrderPage {...props} userId={userId} />}
-      </Tab.Screen>
-    </Tab.Navigator>
-  );
-};
 
 export default HomePage;
